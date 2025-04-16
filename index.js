@@ -5,15 +5,27 @@ const PORT = 3000;
 
 let counter = 0; // Dùng chung cho cả 2 trường hợp nếu muốn tách thì tách riêng ra
 let counterNhieuLan = 0; // Đếm số lần gọi /goi-nhieu-lan
+let cbOpen = false;
 
 // Trường hợp 1: Gọi 5 lần, lần thứ 6 thì hiển thị CB OPEN
 app.get('/goi-tung-lan', async (req, res) => {
+  if (cbOpen) {
+    return res.send('CB OPEN – Dịch vụ đã đóng, không thể gọi Service 2 nữa.');
+  }
+
   counter++;
+
   if (counter <= 5) {
-    await axios.get('http://localhost:3001/goi');
-    res.send(`Đã gọi tới Service 2 lần thứ ${counter}`);
+    try {
+      await axios.get('http://localhost:3001/goi');
+      res.send(`Đã gọi tới Service 2 lần thứ ${counter}`);
+    } catch (err) {
+      res.status(500).send('Không thể kết nối tới Service 2');
+    }
   } else {
-    res.send('CB OPEN – Đã gọi quá 5 lần');
+    // Bật CB OPEN và ngừng các yêu cầu tiếp theo
+    cbOpen = true;
+    res.send('CB OPEN – Đã gọi quá 5 lần, dịch vụ đóng lại.');
   }
 });
 
